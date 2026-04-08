@@ -1,0 +1,34 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Frontend",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder:frontend}"
+    },
+    {
+      "name": "Frontend With Chrome",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder:frontend}",
+      "serverReadyAction": {
+        "pattern": "- Local:.+(https?://.+)",
+        "action": "startDebugging",
+        "name": "Chrome"
+      }
+    },
+    {
+      "name": "Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder:frontend}",
+      "port": 9333,
+      "browserLaunchLocation": "ui",
+      "trace": true
+    },
+  ]
+}

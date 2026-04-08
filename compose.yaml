@@ -1,0 +1,102 @@
+name: lumiflow
+
+# WARNING: This compose file includes local-only demo credentials.
+# Before deploying outside localhost, replace POSTGRES_PASSWORD and the
+# matching DB_CREDENTIALS values in the backend and job-service services.
+services:
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ai
+      POSTGRES_PASSWORD: human
+      POSTGRES_DB: lumiflowdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - database-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai -d lumiflowdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  inference:
+    build:
+      context: ./inference
+      dockerfile: packages/lumiflow-eval-service/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DEV: "0"
+
+  job-service:
+    build:
+      context: ./job-service
+    depends_on:
+      database:
+        condition: service_healthy
+      inference:
+        condition: service_started
+    ports:
+      - "4004:4004"
+    environment:
+      NODE_ENV: production
+      JOB_SERVICE_LISTEN_PORT: "4004"
+      JOB_SERVICE_HOST: http://localhost:4004
+      FRONTEND_PUBLIC_URL_AND_PORT: http://localhost:3000
+      EVAL_HOST: http://inference:8000
+      DB_HOST: database
+      DB_DATABASE_NAME: lumiflowdb
+      DB_CREDENTIALS: '{"username":"ai","password":"human","port":5432}'
+      MAX_JOB_ATTEMPTS: "3"
+
+  backend:
+    build:
+      context: ./backend
+    depends_on:
+      database:
+        condition: service_healthy
+      job-service:
+        condition: service_started
+      inference:
+        condition: service_started
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      APP_ENV: production
+      BACKEND_LISTEN_PORT: "4000"
+      BACKEND_REQUEST_BODY_LIMIT: 10mb
+      BACKEND_PUBLIC_URL_AND_PORT: http://localhost:4000
+      FRONTEND_PUBLIC_URL_AND_PORT: http://localhost:3000
+      AUTH_SECRET: lumiflow-local-compose-auth-secret
+      AUTH_COOKIE_DOMAIN: localhost
+      GOOGLE_CLIENT_ID: local-google-client-id
+      GOOGLE_CLIENT_SECRET: local-google-client-secret
+      DB_HOST: database
+      DB_DATABASE_NAME: lumiflowdb
+      DB_CREDENTIALS: '{"username":"ai","password":"human","port":5432}'
+      EVAL_HOST: http://inference:8000
+      JOB_HOST: http://job-service:4004
+      API_KEYS: ""
+      APP_ACCESS_ALLOW_LIST: ""
+      ADDITIONAL_ORG_ACCESS_DOMAINS: ""
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_BACKEND_URL: http://localhost:4000/
+        APP_ENV: production
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      APP_ENV: production
+      NEXT_PUBLIC_BACKEND_URL: http://localhost:4000/
+
+volumes:
+  database-data:

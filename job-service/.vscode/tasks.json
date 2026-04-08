@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Database Container",
+      "type": "shell",
+      "command": "bash ${workspaceFolder:job-service}/scripts/start-database-container.sh",
+      "presentation": {
+        "close": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}

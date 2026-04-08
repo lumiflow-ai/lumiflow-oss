@@ -1,0 +1,66 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              ":PACKAGE_WITH_PROTOCOL:",
+              ":BLANK_LINE:",
+              ":URL:",
+              ":BLANK_LINE:",
+              ":PACKAGE:",
+              ":BLANK_LINE:",
+              "@/types",
+              ":BLANK_LINE:",
+              "@/server/**",
+              ":BLANK_LINE:",
+              ["@/library/**", "@/lib/**"],
+              ":BLANK_LINE:",
+              "@/model/**",
+              ":BLANK_LINE:",
+              ["@/routes/**", "@/routes"],
+              ":BLANK_LINE:",
+              [":ALIAS:", "!@/migrations/**", "!@/migrations", "!@/scripts/**"],
+              ":BLANK_LINE:",
+              ["@/migrations/**", "@/migrations", "@/scripts/**"],
+              ":BLANK_LINE:",
+              "../**",
+              ":BLANK_LINE:",
+              ":PATH:"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "style": {
+        "noParameterAssign": "error",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useNumberNamespace": "error",
+        "noInferrableTypes": "error",
+        "noUselessElse": "error"
+      }
+    }
+  },
+  "files": {
+    "includes": ["**/src/**/*.ts", "**/tsconfig.json", "!**/src/generated/**/*"]
+  }
+}

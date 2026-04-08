@@ -1,0 +1,42 @@
+{
+    "folders": [
+        {
+            "name": "lumiflow-oss",
+            "path": "."
+        },
+        {
+            "name": "frontend",
+            "path": "frontend"
+        },
+        {
+            "name": "backend",
+            "path": "backend"
+        },
+        {
+            "name": "job-service",
+            "path": "job-service"
+        },
+        {
+            "name": "inference",
+            "path": "inference"
+        }
+    ],
+    "settings": {
+        "biome.lsp.bin": {
+            "darwin-arm64": "./frontend/node_modules/@biomejs/cli-darwin-arm64/biome",
+            "darwin-x64": "./frontend/node_modules/@biomejs/cli-darwin-x64/biome",
+            "linux-arm64": "./frontend/node_modules/@biomejs/cli-linux-arm64/biome",
+            "linux-x64": "./frontend/node_modules/@biomejs/cli-linux-x64/biome"
+        },
+        "vitest.configSearchPatternInclude": "{vite,vitest}.config*.{ts,js,mjs,cjs,cts,mts}",
+        "[jsonc]": {
+            "editor.defaultFormatter": "biomejs.biome"
+        },
+        "files.exclude": {
+            "frontend": true,
+            "backend": true,
+            "job-service": true,
+            "inference": true
+        }
+    }
+}

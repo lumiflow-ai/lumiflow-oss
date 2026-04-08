@@ -1,0 +1,61 @@
+{
+	"name": "Lumiflow OSS",
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
+	"features": {
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {
+			"version": "latest"
+		}
+	},
+	"runArgs": [
+		"--name", "lumiflow-oss-${devcontainerId}"
+	],
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"forwardPorts": [
+		3000, // frontend
+		4000, // backend
+		4004, // job service
+		5432, // database
+		8000  // eval service
+	],
+	"postCreateCommand": "./.devcontainer/setup.sh",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"charliermarsh.ruff",
+				"biomejs.biome",
+				"dbaeumer.vscode-eslint",
+				"github.vscode-pull-request-github",
+				"ms-azuretools.vscode-containers",
+				"ms-ossdata.vscode-pgsql",
+				"ms-python.debugpy",
+				"ms-python.python",
+				"ms-vsliveshare.vsliveshare",
+				"vitest.explorer"
+			],
+			"settings": {
+				"pgsql.connections": [
+					{
+						"id": "69C09F2D-EBC9-45F9-AB27-7D209E239A28",
+						"groupId": "CC618BA6-02AA-4725-9EF5-57F7C4D8ECAF",
+						"authenticationType": "SqlLogin",
+						"connectTimeout": 15,
+						"applicationName": "vscode-pgsql",
+						"clientEncoding": "utf8",
+						"sslmode": "prefer",
+						"savePassword": true,
+						"server": "localhost",
+						"user": "ai",
+						"password": "human",
+						"database": "lumiflowdb",
+						"sshPassword": "",
+						"profileName": "lumiflowdb",
+						"expiresOn": 0,
+						"profileSource": 0,
+						"displayName": "lumiflowdb",
+						"port": "5432"
+					}
+				]
+			}
+		}
+	}
+}

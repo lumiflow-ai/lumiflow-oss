@@ -1,0 +1,15 @@
+name: Job Service lint
+description: Lint the job-service workspace.
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Biome
+      uses: biomejs/setup-biome@v2
+      with:
+        working-dir: job-service
+
+    - name: Run Biome
+      shell: bash
+      working-directory: job-service
+      run: biome ci --error-on-warnings .

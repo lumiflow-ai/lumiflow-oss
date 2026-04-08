@@ -1,0 +1,13 @@
+**/.env
+**/.git
+**/.gitignore
+**/.pytest_cache
+**/.ruff_cache
+**/.venv
+**/.vscode
+**/__pycache__
+**/*.pyc
+**/.ipynb_checkpoints
+Dockerfile*
+documentation
+notebooks

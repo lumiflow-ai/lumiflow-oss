@@ -1,0 +1,107 @@
+{
+  "fakeModelKey": "fake",
+  "models": {
+    "fake": {
+      "name": "func",
+      "id": "fake",
+      "function": "fake_evaluation_response",
+      "modelParams": {},
+      "genParams": {}
+    },
+    "gpt-oss-20b": {
+      "name": "bedrock",
+      "id": "openai.gpt-oss-20b-1:0",
+      "modelParams": {},
+      "genParams": {
+        "max_new_tokens": 2048
+      }
+    },
+    "nova-micro": {
+      "name": "bedrock",
+      "id": "amazon.nova-micro-v1:0",
+      "modelParams": {},
+      "genParams": {}
+    },
+    "claude-sonnet-4-6": {
+      "name": "bedrock",
+      "id": "us.anthropic.claude-sonnet-4-6",
+      "modelParams": {},
+      "genParams": {}
+    },
+    "deepseek-r1": {
+      "name": "bedrock",
+      "id": "us.deepseek.r1-v1:0",
+      "modelParams": {},
+      "genParams": {}
+    },
+    "gpt-5-mini": {
+      "name": "openai",
+      "id": "gpt-5-mini",
+      "modelParams": {},
+      "genParams": {}
+    },
+    "gpt-5-nano": {
+      "name": "openai",
+      "id": "gpt-5-nano",
+      "modelParams": {},
+      "genParams": {}
+    },
+    "llama-3-1-70b": {
+      "name": "bedrock",
+      "id": "us.meta.llama3-1-70b-instruct-v1:0",
+      "modelParams": {},
+      "genParams": {
+        "temperature": 0.5,
+        "top_p": 0.9,
+        "max_new_tokens": 2048
+      }
+    },
+    "claude-3-5-haiku": {
+      "name": "bedrock",
+      "id": "us.anthropic.claude-3-5-haiku-20241022-v1:0",
+      "modelParams": {},
+      "genParams": {}
+    },
+    "gemini-2.5-flash": {
+      "name": "vertexai",
+      "id": "google/gemini-2.5-flash",
+      "modelParams": {},
+      "genParams": {}
+    },
+    "gemini-2.5-pro": {
+      "name": "vertexai",
+      "id": "google/gemini-2.5-pro",
+      "modelParams": {},
+      "genParams": {}
+    }
+  },
+  "wrappers": {
+    "structuredOutput": {
+      "enabled": true
+    },
+    "pacer": {
+      "enabled": true,
+      "initialDelay": 0,
+      "minDelay": 0,
+      "maxDelay": 5,
+      "decay": 0.9,
+      "increment": 1,
+      "exceptions": [
+        "RateLimitException",
+        "ServiceErrorException"
+      ]
+    },
+    "retry": {
+      "enabled": true,
+      "retries": 2,
+      "raiseLastException": true,
+      "backoff": 1,
+      "backoffMax": 5,
+      "jitter": 0.5,
+      "exceptions": [
+        "RateLimitException",
+        "ServiceErrorException"
+      ]
+    }
+  }
+}

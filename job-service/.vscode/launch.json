@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Job-service",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder:job-service}",
+      "preLaunchTask": "Start Database Container",
+      "env": {
+        "DEBUG": "*"
+      }
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+# https://www.anthropic.com/pricing#api
+model_id	model_name	input_cost	output_cost
+claude-3-7-sonnet	Claude 3.7 Sonnet	3.00	15.00
+claude-3-5-sonnet	Claude 3.5 Sonnet	3.00	15.00
+claude-3-5-haiku	Claude 3.5 Haiku	0.80	4.00
+claude-3-haiku	Claude 3 Haiku	0.25	1.25
+claude-3-opus	Claude 3 Opus	15.00	75.00

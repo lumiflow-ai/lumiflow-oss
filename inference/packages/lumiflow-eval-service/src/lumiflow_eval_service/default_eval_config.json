@@ -1,0 +1,41 @@
+{
+  "fakeModelKey": "fake",
+  "models": {
+    "fake": {
+      "name": "func",
+      "id": "fake",
+      "function": "fake_evaluation_response",
+      "modelParams": {},
+      "genParams": {}
+    }
+  },
+  "wrappers": {
+    "structuredOutput": {
+      "enabled": true
+    },
+    "pacer": {
+      "enabled": true,
+      "initialDelay": 0,
+      "minDelay": 0,
+      "maxDelay": 5,
+      "decay": 0.9,
+      "increment": 1,
+      "exceptions": [
+        "RateLimitException",
+        "ServiceErrorException"
+      ]
+    },
+    "retry": {
+      "enabled": true,
+      "retries": 2,
+      "raiseLastException": true,
+      "backoff": 1,
+      "backoffMax": 5,
+      "jitter": 0.5,
+      "exceptions": [
+        "RateLimitException",
+        "ServiceErrorException"
+      ]
+    }
+  }
+}

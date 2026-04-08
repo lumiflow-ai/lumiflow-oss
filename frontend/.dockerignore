@@ -1,0 +1,14 @@
+**/.dockerignore
+**/.env
+**/.git
+**/.gitignore
+**/.next
+**/.vscode
+**/coverage
+**/node_modules
+**/npm-debug.log
+**/playwright-report
+**/test-results
+**/.playwright-mcp
+Dockerfile*
+README.md

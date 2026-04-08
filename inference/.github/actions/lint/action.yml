@@ -1,0 +1,30 @@
+name: Inference lint
+description: Lint the inference workspace.
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: inference
+      run: pip install ruff flake8
+
+    - name: Run Ruff check
+      shell: bash
+      working-directory: inference
+      run: ruff check .
+
+    - name: Run Ruff format check
+      shell: bash
+      working-directory: inference
+      run: ruff format --check .
+
+    - name: Run Flake8
+      shell: bash
+      working-directory: inference
+      run: flake8 .

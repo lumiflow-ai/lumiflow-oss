@@ -1,0 +1,50 @@
+name: Job Service
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - job-service/**
+      - .github/workflows/job-service.yml
+  push:
+    branches:
+      - main
+    paths:
+      - job-service/**
+      - .github/workflows/job-service.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.ref_name != 'main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Run job-service lint
+        uses: ./job-service/.github/actions/lint
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Run job-service tests
+        uses: ./job-service/.github/actions/test
+

@@ -1,0 +1,12 @@
+services:
+  database:
+    image: "postgres"
+    env_file:
+      - postgres.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - database-data:/var/lib/postgresql
+    command: ["postgres", "-c", "log_statement=all"]
+volumes:
+  database-data:

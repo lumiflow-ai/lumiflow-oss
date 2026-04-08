@@ -1,0 +1,12 @@
+model_id	model_name	input_cost	output_cost
+# https://ai.google.dev/gemini-api/docs/pricing
+google/gemini-2.5-pro	Gemini 2.5 Pro	1.25	10.00
+google/gemini-2.5-flash	Gemini 2.5 Flash	0.30	2.50
+google/gemini-2.0-flash	Gemini 2.0 Flash	0.10	0.40
+google/gemini-2.0-flash-lite	Gemini 2.0 Flash Lite	0.075	0.30
+# Currently free as in public preview, see https://console.cloud.google.com/vertex-ai/publishers/meta/model-garden/llama-3.1-405b-instruct-maas
+meta/llama-3.1-8b-instruct-maas	Llama 3.1 8b	0.00	0.00
+meta/llama-3.1-70b-instruct-maas	Llama 3.1 70b	0.00	0.00
+# https://cloud.google.com/vertex-ai/generative-ai/pricing
+meta/llama-3.1-405b-instruct-maas	Llama 3.1 70b	5.00	16.00
+meta/llama-3.3-70b-instruct-maas	Llama 3.3 70b	0.72	0.72

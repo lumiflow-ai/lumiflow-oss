@@ -1,0 +1,21 @@
+name: Inference test
+description: Test the inference workspace.
+
+runs:
+  using: composite
+  steps:
+    - name: Install uv and set the python version
+      uses: astral-sh/setup-uv@v6
+      with:
+        python-version: "3.11"
+        enable-cache: true
+
+    - name: Install the project
+      shell: bash
+      working-directory: inference
+      run: uv sync --all-packages --locked
+
+    - name: Run tests
+      shell: bash
+      working-directory: inference
+      run: uv run pytest packages

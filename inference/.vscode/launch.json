@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Eval-service",
+            "type": "debugpy",
+            "request": "launch",
+            "python": "${workspaceFolder:inference}/.venv/bin/python3",
+            "module": "uvicorn",
+            "envFile": "${workspaceFolder:inference}/.env",
+            "args": [
+                "lumiflow_eval_service.main:app",
+                "--host",
+                "0.0.0.0",
+                "--port",
+                "8000",
+                "--reload",
+                "--reload-dir",
+                "${workspaceFolder:inference}"
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:inference}",
+                "DEV": "1",
+                "FAKE_MODEL": "1"
+            },
+            "justMyCode": true,
+            "cwd": "${workspaceFolder:inference}"
+        }
+    ]
+}

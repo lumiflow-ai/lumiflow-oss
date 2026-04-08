@@ -1,0 +1,51 @@
+# Keep this file in sync with .flake8
+# To disable a rule in the code, use `# noqa: E266`
+
+exclude = [
+	"*.ipynb",
+    "__pycache__",
+    "__pypackages__",
+    ".git",
+    ".github",
+    ".idea",
+    ".ipynb_checkpoints",
+    ".pyenv",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "build",
+    "data",
+    "data_analysis.egg-info",
+    "dist",
+    "output",
+    "venv",
+]
+
+line-length = 120
+indent-width = 4
+
+target-version = "py311"
+
+[lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E203", # Whitespace before ':'
+	"E266", # Too many leading '#' for block comment
+	"E402", # Module level import not at top of file
+	"E731", # Do not assign a lambda expression, use a def
+]
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"

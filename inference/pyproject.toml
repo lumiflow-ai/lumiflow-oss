@@ -1,0 +1,19 @@
+[project]
+name = "lumiflow"
+version = "0.1.0"
+description = "Lumiflow"
+readme = "readme.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[dependency-groups]
+dev = [
+    "flake8>=7.3.0",
+    "pre-commit>=4.2.0",
+    "pytest>=8.4.1",
+    "ruff>=0.12.7",
+    "tox-uv>=1.26.2",
+]

@@ -1,0 +1,28 @@
+{
+    "biome.lsp.bin": {
+        "darwin-arm64": "./frontend/node_modules/@biomejs/cli-darwin-arm64/biome",
+        "darwin-x64": "./frontend/node_modules/@biomejs/cli-darwin-x64/biome",
+        "linux-arm64": "./frontend/node_modules/@biomejs/cli-linux-arm64/biome",
+        "linux-x64": "./frontend/node_modules/@biomejs/cli-linux-x64/biome"
+    },
+    "python.defaultInterpreterPath": "${workspaceFolder:inference}/.venv/bin/python3",
+    "python.terminal.activateEnvironment": false,
+    "python.testing.pytestArgs": [
+        "${workspaceFolder:inference}"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "eslint.enable": false,
+    "[jsonc]": {
+        "editor.defaultFormatter": "biomejs.biome"
+    },
+    "terminal.integrated.defaultProfile.osx": "zsh",
+    "terminal.integrated.profiles.osx": {
+        "zsh": {
+            "path": "zsh",
+            "args": [
+                "-l"
+            ]
+        }
+    }
+}

@@ -1,0 +1,31 @@
+[project]
+name = "lumiflow-eval-service"
+version = "0.1.0"
+description = "Lumiflow Evaluation Service"
+readme = "README.md"
+authors = []
+requires-python = ">=3.11"
+dependencies = [
+    "boto3>=1.40.1",
+    "fastapi>=0.116.1",
+    "lumiflow-ai-models",
+    "lumiflow-core",
+    "pydantic>=2.11.7",
+    "requests>=2.32.4",
+    "structlog>=25.4.0",
+    "uvicorn>=0.35.0",
+    "watchfiles>=1.1.0",
+]
+
+[project.scripts]
+eval_service = "lumiflow_eval_service.main:main"
+recipe_create = "scripts.recipe_create:main"
+recipe_evaluate = "scripts.recipe_evaluate:main"
+
+[build-system]
+requires = ["uv_build>=0.8.4,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+lumiflow-core = { workspace = true }
+lumiflow-ai-models = { workspace = true }

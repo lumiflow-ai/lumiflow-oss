@@ -1,0 +1,17 @@
+name: Frontend lint
+description: Lint the frontend workspace.
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Biome
+      uses: biomejs/setup-biome@v2
+      with:
+        working-dir: frontend
+
+    - name: Run Biome
+      shell: bash
+      working-directory: frontend
+      run: |
+        biome -V
+        biome ci --error-on-warnings .

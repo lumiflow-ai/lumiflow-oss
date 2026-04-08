@@ -1,0 +1,4 @@
+# Exclude source maps from Vercel deployment
+*.map
+**/*.map
+.next/**/*.map

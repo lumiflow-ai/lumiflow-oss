@@ -1,0 +1,31 @@
+# Keep this file in sync with ruff.toml
+# To disable a rule in the code, use `# noqa: E266`
+
+[flake8]
+max-line-length = 120
+exclude =
+	*.ipynb,
+    __pycache__,
+    __pypackages__,
+    .git,
+    .github,
+    .idea,
+    .ipynb_checkpoints,
+    .pyenv,
+    .pytest_cache,
+    .ruff_cache,
+    .tox,
+    .venv,
+    .vscode,
+    build,
+    data,
+    data_analysis.egg-info,
+    dist,
+    output,
+    venv,
+ignore = 
+    E203,
+	E266,
+	E402,
+	E731,
+	W503

@@ -1,0 +1,14 @@
+# Dependency directories
+node_modules/
+
+# dotenv environment variables file
+.env
+
+# Typescript outDir
+dist/
+tsconfig.tsbuildinfo
+
+coverage/
+
+src/generated
+.claude/settings.local.json

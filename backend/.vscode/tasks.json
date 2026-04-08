@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Start Database Container",
+      "type": "shell",
+      "command": "docker compose -f ${workspaceFolder:backend}/dev-services/compose.yaml up -d database",
+      "presentation": {
+        "close": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}

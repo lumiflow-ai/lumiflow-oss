@@ -1,0 +1,27 @@
+name: Backend build
+description: Build and typecheck the backend workspace.
+
+runs:
+  using: composite
+  steps:
+    - name: Use Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version-file: backend/.nvmrc
+        cache: npm
+        cache-dependency-path: backend/package-lock.json
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: backend
+      run: npm ci
+
+    - name: Generate intermediates
+      shell: bash
+      working-directory: backend
+      run: npm run generate:types
+
+    - name: Typecheck
+      shell: bash
+      working-directory: backend
+      run: npm run typecheck

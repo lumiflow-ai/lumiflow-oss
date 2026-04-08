@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "compounds": [
+        {
+            "name": "All",
+            "configurations": [
+                "Backend",
+                "Job-service",
+                "Eval-service",
+                "Frontend With Chrome"
+            ]
+        }
+    ],
+    "configurations": []
+}

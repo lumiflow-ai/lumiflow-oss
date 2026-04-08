@@ -1,0 +1,5 @@
+# https://openai.com/api/pricing/
+model_id	model_name	input_cost	output_cost
+gpt-5	GPT-5	1.25	10.00
+gpt-5-mini	GPT-5 Mini	0.25	2.00
+gpt-5-nano	GPT-5 Nano	0.050	0.40
