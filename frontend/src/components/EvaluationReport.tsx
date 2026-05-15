@@ -254,7 +254,7 @@ const ReportBody = styled.div`${() => css`
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 24px;
+  padding: 20px;
   overflow: auto;
 
 
