@@ -91,6 +91,7 @@ export function loadEvaluationModelRegistry(): OrgEvaluationModelsResponse {
     const allModels = [...BaseEvaluationModelRegistry.evaluationModels, LocalDevFakeEvaluationModel];
     return {
       ...BaseEvaluationModelRegistry,
+      defaultEvaluationModelID: LocalDevFakeEvaluationModel.id,
       evaluationModels: visibleModels(allModels),
     };
   }

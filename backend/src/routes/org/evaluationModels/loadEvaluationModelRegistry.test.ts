@@ -20,6 +20,7 @@ describe("loadEvaluationModelRegistry", () => {
 
     const registry = loadEvaluationModelRegistry();
 
+    expect(registry.defaultEvaluationModelID).toBe("fake");
     expect(registry.evaluationModels).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
