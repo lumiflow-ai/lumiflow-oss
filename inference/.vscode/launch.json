@@ -21,7 +21,6 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder:inference}",
                 "DEV": "1",
-                "FAKE_MODEL": "1"
             },
             "justMyCode": true,
             "cwd": "${workspaceFolder:inference}"
