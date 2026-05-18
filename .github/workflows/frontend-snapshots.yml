@@ -74,7 +74,7 @@ jobs:
           mkdir -p "${ARTIFACT_DIR}/files"
           : > "${MANIFEST}"
 
-          ALL_CHANGED=$(git status --porcelain -- frontend | awk '{print $2}')
+          ALL_CHANGED=$(git status --porcelain --no-renames -- frontend | awk '{print $2}')
           SNAPSHOT_CHANGED=$(printf '%s\n' "${ALL_CHANGED}" | grep '/__screenshots__/' || true)
           NON_SNAPSHOT_CHANGED=$(printf '%s\n' "${ALL_CHANGED}" | grep -v '/__screenshots__/' || true)
 
@@ -96,7 +96,7 @@ jobs:
                 mkdir -p "${ARTIFACT_DIR}/files/$(dirname "${FILE}")"
                 cp "${FILE}" "${ARTIFACT_DIR}/files/${FILE}"
               fi
-            done < <(git status --porcelain -- frontend | awk '{print $1, $2}')
+            done < <(git status --porcelain --no-renames -- frontend | awk '{print $1, $2}')
 
             echo "changes=true" >> "$GITHUB_OUTPUT"
             echo "Changes detected"
