@@ -62,7 +62,7 @@ runs:
         REF: ${{ inputs.ref }}
       run: |
         git add frontend
-        git commit -m "${{ env.COMMIT_MESSAGE }}"
+        git commit --no-verify -m "${{ env.COMMIT_MESSAGE }}"
         git push origin "$REF"
 
     - name: Summarize
