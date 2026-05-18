@@ -33,6 +33,7 @@ jobs:
       changes: ${{ steps.check_changes.outputs.changes }}
       changed_count: ${{ steps.check_changes.outputs.changed_count }}
       changed_files: ${{ steps.check_changes.outputs.changed_files }}
+      source_sha: ${{ steps.source_revision.outputs.source_sha }}
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
@@ -41,6 +42,12 @@ jobs:
           persist-credentials: false
           path: source
           ref: ${{ inputs.branch }}
+
+      - name: Record Source Revision
+        id: source_revision
+        shell: bash
+        working-directory: source
+        run: echo "source_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Use Node.js
         uses: actions/setup-node@v4
@@ -143,7 +150,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
           path: push-worktree
-          ref: ${{ inputs.branch }}
+          ref: ${{ needs.generate.outputs.source_sha }}
 
       - name: Download Snapshot Updates
         uses: actions/download-artifact@v4
