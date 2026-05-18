@@ -20,7 +20,7 @@
             ],
             "env": {
                 "PYTHONPATH": "${workspaceFolder:inference}",
-                "DEV": "1",
+                "DEV": "1"
             },
             "justMyCode": true,
             "cwd": "${workspaceFolder:inference}"
