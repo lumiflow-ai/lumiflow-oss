@@ -91,5 +91,5 @@ jobs:
               body:
             `### Snapshot Updates May Be Required
 
-            Run the \`Frontend Update Snapshots\` workflow to regenerate them.`
+            A maintainer can comment \`/update-snapshots\` to regenerate them.`
             })

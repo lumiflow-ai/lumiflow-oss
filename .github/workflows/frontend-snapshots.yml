@@ -1,6 +1,8 @@
 name: Frontend Update Snapshots
 
 on:
+  issue_comment:
+    types: [created]
   workflow_dispatch:
     inputs:
       branch:
@@ -18,19 +20,119 @@ env:
 
 permissions:
   contents: write
+  issues: write
+  pull-requests: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ inputs.branch }}
+  group: ${{ github.workflow }}-${{ inputs.branch || github.event.issue.number || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
   update:
     name: update snapshots
     runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.issue.pull_request &&
+        github.event.comment.body == '/update-snapshots' &&
+        contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+      )
     timeout-minutes: 10
     steps:
+      - name: Resolve target
+        id: target
+        uses: actions/github-script@v8
+        with:
+          script: |
+            if (context.eventName === "workflow_dispatch") {
+              const branch = "${{ inputs.branch }}";
+              core.setOutput("checkout_repository", context.repo.owner + "/" + context.repo.repo);
+              core.setOutput("checkout_ref", branch);
+              core.setOutput("push_ref", branch);
+              core.setOutput("mode", "direct");
+              core.setOutput("summary_ref", branch);
+              return;
+            }
+
+            const { data: pullRequest } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+
+            const sameRepository =
+              pullRequest.head.repo.full_name === `${context.repo.owner}/${context.repo.repo}`;
+            const pushRef = sameRepository
+              ? pullRequest.head.ref
+              : `snapshot-updates/pr-${context.issue.number}`;
+
+            core.setOutput("checkout_repository", pullRequest.head.repo.full_name);
+            core.setOutput("checkout_ref", pullRequest.head.ref);
+            core.setOutput("push_ref", pushRef);
+            core.setOutput("mode", sameRepository ? "direct" : "helper");
+            core.setOutput(
+              "summary_ref",
+              sameRepository ? pullRequest.head.ref : `${context.repo.owner}:${pushRef}`,
+            );
+
+      - name: Checkout Source
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.target.outputs.checkout_repository }}
+          ref: ${{ steps.target.outputs.checkout_ref }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Configure Git
+        shell: bash
+        run: |
+          git config --global user.name "${{ env.AUTHOR_NAME }}"
+          git config --global user.email "${{ env.AUTHOR_EMAIL }}"
+
+      - name: Install dependencies
+        shell: bash
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        shell: bash
+        working-directory: frontend
+        run: npx --no playwright install --with-deps --only-shell
+
+      - name: Update snapshot tests
+        shell: bash
+        working-directory: frontend
+        run: npm run test:snapshot:update
+
+      - name: Check for changes
+        id: check_changes
+        shell: bash
+        run: |
+          CHANGED_FILES=$(git status --porcelain frontend | awk '{print $2}')
+          if [ "${CHANGED_FILES:+x}" ]; then
+            echo "changes=true" >> "$GITHUB_OUTPUT"
+            echo "Changes detected"
+
+            echo "changed_files<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$CHANGED_FILES" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+            echo "changed_count=$(echo "$CHANGED_FILES" | wc -l)" >> "$GITHUB_OUTPUT"
+          else
+            echo "changes=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected"
+          fi
+
       - name: Generate App Token
         id: app-token
+        if: steps.check_changes.outputs.changes == 'true'
         uses: actions/create-github-app-token@v1
         with:
           app-id: ${{ secrets.APP_ID }}
@@ -38,14 +140,82 @@ jobs:
           owner: lumiflow-ai
           repositories: lumiflow-oss
 
-      - name: Checkout Source
-        uses: actions/checkout@v4
-        with:
-          token: ${{ steps.app-token.outputs.token }}
-          fetch-depth: 0
-          ref: ${{ inputs.branch }}
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.changes == 'true'
+        shell: bash
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+          MODE: ${{ steps.target.outputs.mode }}
+          PUSH_REF: ${{ steps.target.outputs.push_ref }}
+        run: |
+          git add frontend
+          git -c core.hooksPath=/dev/null commit -m "${{ env.COMMIT_MESSAGE }}"
+          if [[ "$MODE" == "helper" ]]; then
+            git -c core.hooksPath=/dev/null -c credential.helper= push --force-with-lease "https://x-access-token:${APP_TOKEN}@github.com/${{ github.repository }}.git" "HEAD:${PUSH_REF}"
+          else
+            git -c core.hooksPath=/dev/null -c credential.helper= push "https://x-access-token:${APP_TOKEN}@github.com/${{ github.repository }}.git" "HEAD:${PUSH_REF}"
+          fi
 
-      - name: Run frontend snapshot update
-        uses: ./frontend/.github/actions/update-snapshots
+      - name: Report Results
+        if: github.event_name == 'issue_comment'
+        uses: actions/github-script@v8
         with:
-          ref: ${{ inputs.branch }}
+          script: |
+            const mode = "${{ steps.target.outputs.mode }}";
+            const hasChanges = "${{ steps.check_changes.outputs.changes }}" === "true";
+            const changedCount = "${{ steps.check_changes.outputs.changed_count }}";
+            const changedFiles = `${{ steps.check_changes.outputs.changed_files }}`;
+            const summaryRef = "${{ steps.target.outputs.summary_ref }}";
+            const pushRef = "${{ steps.target.outputs.push_ref }}";
+
+            let body;
+            if (hasChanges && mode === "helper") {
+              body = `### Snapshots Updated
+
+            Updated **${changedCount}** frontend snapshot(s) and pushed them to \`${summaryRef}\`.
+
+            Because this PR comes from a fork, the workflow did not push directly to the contributor's branch. A maintainer can open a PR from \`${pushRef}\` or cherry-pick the snapshot commit.
+
+            #### Changed Files
+            \`\`\`
+            ${changedFiles}
+            \`\`\``;
+            } else if (hasChanges) {
+              body = `### Snapshots Updated
+
+            Updated **${changedCount}** frontend snapshot(s) and pushed them to \`${summaryRef}\`.
+
+            #### Changed Files
+            \`\`\`
+            ${changedFiles}
+            \`\`\``;
+            } else {
+              body = `### No Snapshot Updates Required
+
+            Tests ran successfully but no snapshots needed updating.`;
+            }
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            });
+
+      - name: Summarize
+        shell: bash
+        run: |
+          if [[ "${{ steps.check_changes.outputs.changes }}" == "true" ]]; then
+            echo "### Snapshots Updated" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Successfully updated **${{ steps.check_changes.outputs.changed_count }}** snapshot(s) on \`${{ steps.target.outputs.summary_ref }}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "#### Changed Files:" >> "$GITHUB_STEP_SUMMARY"
+            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "${{ steps.check_changes.outputs.changed_files }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### No Snapshot Updates Required" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Tests ran successfully but no snapshots needed updating." >> "$GITHUB_STEP_SUMMARY"
+          fi
