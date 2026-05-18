@@ -1,5 +1,7 @@
 import type { EvaluationModelConfiguration, OrgEvaluationModelsResponse } from "@/types";
 
+import { isDev } from "@/serverInitSetup/config";
+
 type EvaluationModelRegistryEntry = EvaluationModelConfiguration & { hidden?: boolean };
 
 /**
@@ -87,10 +89,11 @@ function visibleModels(models: EvaluationModelRegistryEntry[]): EvaluationModelC
 }
 
 export function loadEvaluationModelRegistry(): OrgEvaluationModelsResponse {
-  if (process.env.NODE_ENV === "development") {
+  if (isDev) {
     const allModels = [...BaseEvaluationModelRegistry.evaluationModels, LocalDevFakeEvaluationModel];
     return {
       ...BaseEvaluationModelRegistry,
+      defaultEvaluationModelID: LocalDevFakeEvaluationModel.id,
       evaluationModels: visibleModels(allModels),
     };
   }

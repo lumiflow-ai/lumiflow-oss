@@ -37,11 +37,7 @@ import { fetchService } from "./utils";
 
 const Constants = {
   create_recipe: {
-    model: "gpt-5-mini",
-  },
-  preview_recipe: {
-    model: "gpt-5-mini",
-    parameters: {},
+    model: "", // let the eval service decide the best model to use for creating the recipe
   },
   defaultArtifactPath: [
     { kind: "dataset", id: "" },
