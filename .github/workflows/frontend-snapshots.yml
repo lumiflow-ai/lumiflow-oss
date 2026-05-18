@@ -45,7 +45,76 @@ jobs:
           fetch-depth: 0
           ref: ${{ inputs.branch }}
 
-      - name: Run frontend snapshot update
-        uses: ./frontend/.github/actions/update-snapshots
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          ref: ${{ inputs.branch }}
+          node-version-file: frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Configure Git
+        shell: bash
+        run: |
+          git config --global user.name "${{ env.AUTHOR_NAME }}"
+          git config --global user.email "${{ env.AUTHOR_EMAIL }}"
+
+      - name: Install dependencies
+        shell: bash
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        shell: bash
+        working-directory: frontend
+        run: npx --no playwright install --with-deps --only-shell
+
+      - name: Update snapshot tests
+        shell: bash
+        working-directory: frontend
+        run: npm run test:snapshot:update
+
+      - name: Check for changes
+        id: check_changes
+        shell: bash
+        run: |
+          CHANGED_FILES=$(git status --porcelain frontend | awk '{print $2}')
+          if [ "${CHANGED_FILES:+x}" ]; then
+            echo "changes=true" >> "$GITHUB_OUTPUT"
+            echo "Changes detected"
+
+            echo "changed_files<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$CHANGED_FILES" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+            echo "changed_count=$(echo "$CHANGED_FILES" | wc -l)" >> "$GITHUB_OUTPUT"
+          else
+            echo "changes=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected"
+          fi
+
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.changes == 'true'
+        shell: bash
+        env:
+          REF: ${{ inputs.branch }}
+        run: |
+          git add frontend
+          git commit --no-verify -m "${{ env.COMMIT_MESSAGE }}"
+          git push origin "$REF"
+
+      - name: Summarize
+        shell: bash
+        run: |
+          if [[ "${{ steps.check_changes.outputs.changes }}" == "true" ]]; then
+            echo "### Snapshots Updated" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Successfully updated **${{ steps.check_changes.outputs.changed_count }}** snapshot(s) on \`${{ inputs.branch }}\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "#### Changed Files:" >> "$GITHUB_STEP_SUMMARY"
+            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "${{ steps.check_changes.outputs.changed_files }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### No Snapshot Updates Required" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Tests ran successfully but no snapshots needed updating." >> "$GITHUB_STEP_SUMMARY"
+          fi
