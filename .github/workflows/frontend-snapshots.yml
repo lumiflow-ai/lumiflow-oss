@@ -41,8 +41,8 @@ jobs:
       - name: Checkout Source
         uses: actions/checkout@v4
         with:
-          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
+          persist-credentials: false
           ref: ${{ inputs.branch }}
 
       - name: Use Node.js
@@ -95,11 +95,12 @@ jobs:
         if: steps.check_changes.outputs.changes == 'true'
         shell: bash
         env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
           REF: ${{ inputs.branch }}
         run: |
           git add frontend
           git commit --no-verify -m "${{ env.COMMIT_MESSAGE }}"
-          git push origin "$REF"
+          git -c credential.helper= push "https://x-access-token:${APP_TOKEN}@github.com/${{ github.repository }}.git" "HEAD:${REF}"
 
       - name: Summarize
         shell: bash
