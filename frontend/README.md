@@ -95,3 +95,28 @@ npm run test:snapshot:update
 Snapshot rendering can vary slightly between local machines and CI. If local
 updates do not match CI, maintainers can run the `Frontend Update Snapshots`
 workflow in GitHub Actions for a branch in this repository.
+
+For a pull request branch in this repository, run the workflow from the Actions
+tab. Keep `Use workflow from` set to `Branch: main`, and set
+`Branch to update snapshots on` to the PR branch name.
+
+For a pull request from an external fork, first create a helper branch in this
+repository from the contributor's branch, then run the workflow on that helper
+branch:
+
+```zsh
+git fetch https://github.com/<contributor>/lumiflow-oss.git <branch>
+git switch -c snapshot-updates/pr-<number> FETCH_HEAD
+git push origin snapshot-updates/pr-<number>
+```
+
+In GitHub Actions, run `Frontend Update Snapshots`. Keep `Use workflow from` set
+to `Branch: main`, and set `Branch to update snapshots on` to:
+
+```text
+snapshot-updates/pr-<number>
+```
+
+After the workflow commits updated screenshots to the helper branch, a
+maintainer can open a pull request from that branch or cherry-pick the snapshot
+commit onto the contributor's branch when appropriate.

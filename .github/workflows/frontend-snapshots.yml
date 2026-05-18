@@ -9,25 +9,131 @@ on:
         default: main
 
 env:
-  AUTHOR_NAME: 'github-actions[bot]'
-  AUTHOR_EMAIL: '41898282+github-actions[bot]@users.noreply.github.com'
+  AUTHOR_NAME: "github-actions[bot]"
+  AUTHOR_EMAIL: "41898282+github-actions[bot]@users.noreply.github.com"
   COMMIT_MESSAGE: |
     Updated frontend test snapshots
 
     Co-authored-by: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
 
 permissions:
-  contents: write
+  actions: read
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ inputs.branch }}
   cancel-in-progress: true
 
 jobs:
-  update:
-    name: update snapshots
+  generate:
+    name: generate snapshots
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      changes: ${{ steps.check_changes.outputs.changes }}
+      changed_count: ${{ steps.check_changes.outputs.changed_count }}
+      changed_files: ${{ steps.check_changes.outputs.changed_files }}
+      source_sha: ${{ steps.source_revision.outputs.source_sha }}
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          path: source
+          ref: ${{ inputs.branch }}
+
+      - name: Record Source Revision
+        id: source_revision
+        shell: bash
+        working-directory: source
+        run: echo "source_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: source/frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: source/frontend/package-lock.json
+
+      - name: Install dependencies
+        shell: bash
+        working-directory: source/frontend
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        shell: bash
+        working-directory: source/frontend
+        run: npx --no playwright install --with-deps --only-shell
+
+      - name: Update snapshot tests
+        shell: bash
+        working-directory: source/frontend
+        run: npm run test:snapshot:update
+
+      - name: Check for changes
+        id: check_changes
+        shell: bash
+        working-directory: source
+        run: |
+          ARTIFACT_DIR="${RUNNER_TEMP}/snapshot-updates"
+          MANIFEST="${ARTIFACT_DIR}/manifest.tsv"
+          mkdir -p "${ARTIFACT_DIR}/files"
+          : > "${MANIFEST}"
+
+          ALL_CHANGED=$(git status --porcelain --no-renames -- frontend | awk '{print $2}')
+          SNAPSHOT_CHANGED=$(printf '%s\n' "${ALL_CHANGED}" | grep '/__screenshots__/' || true)
+          NON_SNAPSHOT_CHANGED=$(printf '%s\n' "${ALL_CHANGED}" | grep -v '/__screenshots__/' || true)
+
+          if [ "${NON_SNAPSHOT_CHANGED:+x}" ]; then
+            echo "Snapshot update generated changes outside screenshot directories:" >&2
+            echo "${NON_SNAPSHOT_CHANGED}" >&2
+            exit 1
+          fi
+
+          if [ "${SNAPSHOT_CHANGED:+x}" ]; then
+            while read -r STATUS FILE; do
+              if [[ "${FILE}" != *"/__screenshots__/"* ]]; then
+                continue
+              fi
+
+              printf '%s\t%s\n' "${STATUS}" "${FILE}" >> "${MANIFEST}"
+
+              if [[ "${STATUS}" != *"D"* ]]; then
+                mkdir -p "${ARTIFACT_DIR}/files/$(dirname "${FILE}")"
+                cp "${FILE}" "${ARTIFACT_DIR}/files/${FILE}"
+              fi
+            done < <(git status --porcelain --no-renames -- frontend | awk '{print $1, $2}')
+
+            echo "changes=true" >> "$GITHUB_OUTPUT"
+            echo "Changes detected"
+
+            echo "changed_files<<EOF" >> "$GITHUB_OUTPUT"
+            echo "$SNAPSHOT_CHANGED" >> "$GITHUB_OUTPUT"
+            echo "EOF" >> "$GITHUB_OUTPUT"
+            echo "changed_count=$(echo "$SNAPSHOT_CHANGED" | wc -l)" >> "$GITHUB_OUTPUT"
+          else
+            echo "changes=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected"
+          fi
+
+      - name: Upload Snapshot Updates
+        if: steps.check_changes.outputs.changes == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-updates
+          path: ${{ runner.temp }}/snapshot-updates
+          if-no-files-found: error
+
+  publish:
+    name: publish snapshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: generate
+    if: needs.generate.outputs.changes == 'true'
+    permissions:
+      actions: read
+      contents: read
     steps:
       - name: Generate App Token
         id: app-token
@@ -38,14 +144,80 @@ jobs:
           owner: lumiflow-ai
           repositories: lumiflow-oss
 
-      - name: Checkout Source
+      - name: Checkout Target
         uses: actions/checkout@v4
         with:
-          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
-          ref: ${{ inputs.branch }}
+          persist-credentials: false
+          path: push-worktree
+          ref: ${{ needs.generate.outputs.source_sha }}
 
-      - name: Run frontend snapshot update
-        uses: ./frontend/.github/actions/update-snapshots
+      - name: Download Snapshot Updates
+        uses: actions/download-artifact@v4
         with:
-          ref: ${{ inputs.branch }}
+          name: snapshot-updates
+          path: ${{ runner.temp }}/snapshot-updates
+
+      - name: Apply snapshot updates
+        shell: bash
+        working-directory: push-worktree
+        run: |
+          MANIFEST="${RUNNER_TEMP}/snapshot-updates/manifest.tsv"
+
+          while IFS=$'\t' read -r STATUS FILE; do
+            if [[ "${FILE}" != frontend/*/__screenshots__/* ]]; then
+              echo "Refusing to apply non-snapshot path: ${FILE}" >&2
+              exit 1
+            fi
+
+            if [[ "${STATUS}" == *"D"* ]]; then
+              rm -f "${FILE}"
+            else
+              mkdir -p "$(dirname "${FILE}")"
+              cp "${RUNNER_TEMP}/snapshot-updates/files/${FILE}" "${FILE}"
+            fi
+          done < "${MANIFEST}"
+
+      - name: Commit and push changes
+        shell: bash
+        working-directory: push-worktree
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+          REF: ${{ inputs.branch }}
+          GIT_CONFIG_GLOBAL: /dev/null
+          GIT_CONFIG_NOSYSTEM: "1"
+        run: |
+          git config --local user.name "${{ env.AUTHOR_NAME }}"
+          git config --local user.email "${{ env.AUTHOR_EMAIL }}"
+
+          while IFS=$'\t' read -r _ FILE; do
+            git add -- "${FILE}"
+          done < "${RUNNER_TEMP}/snapshot-updates/manifest.tsv"
+
+          git -c core.hooksPath=/dev/null commit --no-verify -m "${{ env.COMMIT_MESSAGE }}"
+          git -c credential.helper= push "https://x-access-token:${APP_TOKEN}@github.com/${{ github.repository }}.git" "HEAD:${REF}"
+
+      - name: Summarize
+        shell: bash
+        run: |
+          echo "### Snapshots Updated" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Successfully updated **${{ needs.generate.outputs.changed_count }}** snapshot(s) on \`${{ inputs.branch }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "#### Changed Files:" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "${{ needs.generate.outputs.changed_files }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
+
+  summarize:
+    name: summarize
+    runs-on: ubuntu-latest
+    needs: generate
+    if: needs.generate.outputs.changes != 'true'
+    steps:
+      - name: Summarize
+        shell: bash
+        run: |
+          echo "### No Snapshot Updates Required" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Tests ran successfully but no snapshots needed updating." >> "$GITHUB_STEP_SUMMARY"
